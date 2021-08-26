@@ -1,14 +1,21 @@
 
-import json
+import sys
+import argparse
 import pandas as pd
+import spacy
 import emoji
 import re
-import argparse
+import operator
 
 #------------#
 # Parse Args #
 #------------#
 arg_parser = argparse.ArgumentParser(description="Data arguments")
+arg_parser.add_argument(
+    "modelname",
+    type = "str",
+    help = "Subdirectory name in ../data/oupt directory that contains the model output from the train_classification bash script"
+)
 arg_parser.add_argument(
     "inpt",
     type = "str",
@@ -61,29 +68,44 @@ def clean_tweet(text):
     text = text.replace("#", "").replace("_", " ").replace("@", "").strip()
     return text
 
+# Load spacy model
+nlp = spacy.load(f"../../data/oupt/{args.modelname}")
+
 # Run
 if __name__ in "__main__":
+    
+    # Load spacy model
+    df = pd.read_csv(f"../../data/inpt/{args.inpt}", encoding = "utf-8")
 
-    # Load in CSV from args
-    df = pd.read_csv(f"../data/inpt/{args.inpt}", encoding = "utf-8")
-    oupt_list = []
+    # Create list to append model classifications to
+    class_list = []
 
-    # Loop through text field, remove RTs, clean tweet, append to list
-    for i in df['text']:
+    # Loop through data frame and classify text and compare to annotations
+    for index, row in df.iterrows():
+        
+        # Clean tweet
+        text = clean_tweet(row["text"])
 
-        # Bypass retweets
-        if not i.startswith("RT"):
-            
-            # Clean tweet up
-            i = clean_tweet(i)
+        # Get classification
+        doc = nlp(text).cats
 
-            # If tweet still exists, add to dict
-            if i:
-                oupt_dict = {'text': i}
-                oupt_list.append(oupt_dict)
-                
-    # Save as JSONL file
-    with open(f"../data/oupt/{args.oupt}.jsonl", 'w', encoding='utf-8') as f:
-        # Loop through list and dump to jsonl file
-        for item in oupt_list:
-            f.write(json.dumps(item, ensure_ascii=False) + "\n")
+        # Extract label with highest score
+        cur_class = max(doc.items(), key = operator.itemgetter(1))[0]
+
+        # Assign value for review
+        if cur_class == row['annotation']:
+            class_list.append("correct")
+        else:
+            class_list.append("misclassifcation")
+
+        # Append results
+        df["results"] = class_list
+
+        # Calculate accuracy rate
+        accuracy_rate = len([x for x in class_list if x == "correct"]) / len(class_list)
+
+        # Write to stdout
+        sys.st1dout.write(f"\nModel: {args.modelname}\nAnnotation Count: {str(len(df))}\nAccuracy Rate: {str(accuracy_rate)}\n")
+
+    # Save CSV
+    df.to_csv(f"../../data/oupt/{args.oupt}", encoding = "utf-8", index = False)
