@@ -8,13 +8,11 @@ import argparse
 #------------#
 arg_parser = argparse.ArgumentParser(description="Data arguments")
 arg_parser.add_argument(
-    "inpt",
-    type = "str",
+    "--inpt",
     help = "Filename of input csv located in inpt folder with extension"
 )
 arg_parser.add_argument(
-    "oupt",
-    type = "str",
+    "--oupt",
     help = "Name of output JSONL file located in the oupt folder"
 )
 args = arg_parser.parse_args()

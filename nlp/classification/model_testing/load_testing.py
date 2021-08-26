@@ -12,18 +12,15 @@ import operator
 #------------#
 arg_parser = argparse.ArgumentParser(description="Data arguments")
 arg_parser.add_argument(
-    "modelname",
-    type = "str",
+    "--modelname",
     help = "Subdirectory name in ../data/oupt directory that contains the model output from the train_classification bash script"
 )
 arg_parser.add_argument(
-    "inpt",
-    type = "str",
+    "--inpt",
     help = "Filename of input csv located in inpt folder with extension"
 )
 arg_parser.add_argument(
-    "oupt",
-    type = "str",
+    "--oupt",
     help = "Name of output JSONL file located in the oupt folder"
 )
 args = arg_parser.parse_args()
@@ -69,13 +66,13 @@ def clean_tweet(text):
     return text
 
 # Load spacy model
-nlp = spacy.load(f"../../data/oupt/{args.modelname}")
+nlp = spacy.load(f"../data/oupt/{args.modelname}")
 
 # Run
 if __name__ in "__main__":
     
     # Load spacy model
-    df = pd.read_csv(f"../../data/inpt/{args.inpt}", encoding = "utf-8")
+    df = pd.read_csv(f"../data/inpt/{args.inpt}", encoding = "utf-8")
 
     # Create list to append model classifications to
     class_list = []
@@ -87,7 +84,8 @@ if __name__ in "__main__":
         text = clean_tweet(row["text"])
 
         # Get classification
-        doc = nlp(text).cats
+        doc = nlp(text)
+        doc = doc.cats
 
         # Extract label with highest score
         cur_class = max(doc.items(), key = operator.itemgetter(1))[0]
@@ -98,14 +96,14 @@ if __name__ in "__main__":
         else:
             class_list.append("misclassifcation")
 
-        # Append results
-        df["results"] = class_list
+    # Append results
+    df["results"] = class_list
 
-        # Calculate accuracy rate
-        accuracy_rate = len([x for x in class_list if x == "correct"]) / len(class_list)
+    # Calculate accuracy rate
+    accuracy_rate = len([x for x in class_list if x == "correct"]) / len(class_list)
 
-        # Write to stdout
-        sys.st1dout.write(f"\nModel: {args.modelname}\nAnnotation Count: {str(len(df))}\nAccuracy Rate: {str(accuracy_rate)}\n")
+    # Write to stdout
+    sys.stdout.write(f"\nModel: {args.modelname}\nAnnotation Count: {str(len(df))}\nAccuracy Rate: {str(accuracy_rate)}\n")
 
     # Save CSV
-    df.to_csv(f"../../data/oupt/{args.oupt}", encoding = "utf-8", index = False)
+    df.to_csv(f"../data/oupt/{args.oupt}", encoding = "utf-8", index = False)
