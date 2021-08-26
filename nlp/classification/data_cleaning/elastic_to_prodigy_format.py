@@ -3,7 +3,25 @@ import json
 import pandas as pd
 import emoji
 import re
+import argparse
 
+#------------#
+# Parse Args #
+#------------#
+arg_parser = argparse.ArgumentParser(description="Data arguments")
+arg_parser.add_argument(
+    "inpt",
+    type = "str",
+    help = "Filename of input csv located in inpt folder with extension"
+)
+arg_parser.add_argument(
+    "oupt",
+    type = "str",
+    help = "Name of output JSONL file located in the oupt folder"
+)
+args = arg_parser.parse_args()
+
+# Create string of emoji faces for regex pattern
 emoticon_string = r"""
     (?:
       [<>]?
@@ -18,11 +36,24 @@ emoticon_string = r"""
     )"""
 
 def give_emoji_free_text(text): 
+    '''
+    desc: function to remove emojis
+    inpt:
+        text [str]: string to clean
+    oupt:
+        [str]: cleaned string 
+    '''
     return emoji.get_emoji_regexp().sub(r'', text)
 
 def clean_tweet(text):
-    #text = " ".join(re.sub(r"((https?://)?\w+(\.\w+)+(/\w+)*(/\w+\.\w+)?(\?[\w%&=.]*)*(?=[^\w.?&%=]))|((?<!\w)@[\w+]{1,15}\b)", "", text).split())
-    #text = " ".join(re.sub(r"((https?://)?\w+(\.\w+)+(/\w+)*(/\w+\.\w+)?(\?[\w%&=.]*)*(?=[^\w.?&%=]))", "", text).split())
+    '''
+    desc: given text from tweet, clean and convert to format that can be analyzed
+    inpt:
+        text [str]: string from tweet to be cleaned
+    oupt:
+        text [str]: cleaned string
+    
+    '''
     text = give_emoji_free_text(text)
     text = re.sub(emoticon_string, '', text)
     text = re.sub(r"(http\S+)|(www\S+)", "", text)
@@ -30,15 +61,20 @@ def clean_tweet(text):
     text = text.replace("#", "").replace("_", " ").replace("@", "").strip()
     return text
 
+# Run
 if __name__ in "__main__":
-    df = pd.read_csv("../data/inpt/tweets_filtered.csv", encoding = "utf-8")
+    # Load in CSV from args
+    df = pd.read_csv(f"../data/inpt/{args.inpt}", encoding = "utf-8")
+    # Create list 
     oupt_list = []
+    # Loop through text field, remove RTs, clean tweet, append to list
     for i in df['text']:
         if not i.startswith("RT"):
             i = clean_tweet(i)
             if i:
                 oupt_dict = {'text': i}
                 oupt_list.append(oupt_dict)
-    with open("../data/oupt/oupt_tweets_filtered.jsonl", 'w', encoding='utf-8') as f:
+    # Save as JSONL file
+    with open(f"../data/oupt/{args.oupt}.jsonl", 'w', encoding='utf-8') as f:
         for item in oupt_list:
             f.write(json.dumps(item, ensure_ascii=False) + "\n")
