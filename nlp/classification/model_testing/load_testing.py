@@ -73,23 +73,18 @@ if __name__ in "__main__":
     
     # Load spacy model
     df = pd.read_csv(f"../data/inpt/{args.inpt}", encoding = "utf-8")
-
     # Create list to append model classifications to
     class_list = []
 
     # Loop through data frame and classify text and compare to annotations
     for index, row in df.iterrows():
-        
         # Clean tweet
         text = clean_tweet(row["text"])
-
         # Get classification
         doc = nlp(text)
         doc = doc.cats
-
         # Extract label with highest score
         cur_class = max(doc.items(), key = operator.itemgetter(1))[0]
-
         # Assign value for review
         if cur_class == row['annotation']:
             class_list.append("correct")
@@ -98,10 +93,8 @@ if __name__ in "__main__":
 
     # Append results
     df["results"] = class_list
-
     # Calculate accuracy rate
     accuracy_rate = len([x for x in class_list if x == "correct"]) / len(class_list)
-
     # Write to stdout
     sys.stdout.write(f"\nModel: {args.modelname}\nAnnotation Count: {str(len(df))}\nAccuracy Rate: {str(accuracy_rate)}\n")
 

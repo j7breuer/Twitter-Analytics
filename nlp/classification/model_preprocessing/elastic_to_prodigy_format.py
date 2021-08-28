@@ -68,13 +68,10 @@ if __name__ in "__main__":
 
     # Loop through text field, remove RTs, clean tweet, append to list
     for i in df['text']:
-
         # Bypass retweets
         if not i.startswith("RT"):
-            
             # Clean tweet up
             i = clean_tweet(i)
-
             # If tweet still exists, add to dict
             if i:
                 oupt_dict = {'text': i}
