@@ -56,7 +56,7 @@ def clean_tweet(text):
     text = re.sub(emoticon_string, '', text)
     text = re.sub(r"(http\S+)|(www\S+)", "", text)
     text = ''.join(x for x in text if x not in emoji.UNICODE_EMOJI)
-    text = text.replace("#", "").replace("_", " ").replace("@", "").strip()
+    text = text.replace("#", "").replace("_", " ").strip()
     return text
 
 # Run
